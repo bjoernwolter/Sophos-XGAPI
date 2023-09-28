@@ -133,12 +133,6 @@ class XGAPI {
 		// Execute request
 		$res = $this->curlRequest($xml);
 
-		// Declare callback functions used to remove "@attributes" element in array created from the firewall's response
-		function rmMiscXSEObjects($a) {
-			if (isset($a['@attributes'])) { unset($a['@attributes']); }
-			return $a;
-		}
-
 		// Analyze result : if one of the entities does not return a correct result or does not return the wanted entity then throw an error, else fill a return element (allows us to return only wanted information, without request status related information)
 		foreach ($entities as $key => $value) {
 			// If $value is an array, it means that a filter is set so we use $key for entity name, if it is not an array then we use $value for the entity name
@@ -152,9 +146,9 @@ class XGAPI {
 				} else {
 					// This if statement check (using the position of the array element "@attributes") if there is one or several element in the response. If there is only one result, then put in an array in order to keep the same structure if there are one or more results in the response
 					if (isset($res[$entity]['@attributes'])) {
-						$return[$entity] = array_map('Sophos\rmMiscXSEObjects', [$res[$entity]]);
+						$return[$entity] = array_map(array($this,'rmMiscXSEObjects'), [$res[$entity]]);
 					} else {
-						$return[$entity] = array_map('Sophos\rmMiscXSEObjects', $res[$entity]);
+						$return[$entity] = array_map(array($this,'rmMiscXSEObjects'), $res[$entity]);
 					}
 				}
 			}
@@ -162,6 +156,16 @@ class XGAPI {
 
 		return $return;
 	}
+	
+	/**
+	 *  Method used als callback to remove "@attributes" element in array created from the firewall's response
+	 *  @param array $a array with elements from firewall's response
+	 *  @return array cleaned array
+	 */
+	private	function rmMiscXSEObjects($a) {
+			if (isset($a['@attributes'])) { unset($a['@attributes']); }
+			return $a;
+		}
 
 
 	/**
